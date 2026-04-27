@@ -1,47 +1,19 @@
 ---
 command: git:catchup
-description: Analyze recent work to identify what was worked on in previous session(s)
+description: Identify what was worked on in previous session(s)
 ---
 
-# Catchup Command
+# Catchup
 
-Analyze the current working state and recent development history to identify what was worked on in previous session(s).
+Inspect with one bash call:
 
-## Steps to Execute
+```
+git status -sb && echo --- && git log -10 --oneline && echo --- && git log -3 --stat
+```
 
-1. **Check uncommitted changes**:
-   - Run `git status` to see modified, staged, and untracked files
-   - Run `git diff` to see unstaged changes
-   - Run `git diff --staged` to see staged changes
+If status shows uncommitted changes, follow with `git diff --stat HEAD`
+(filenames + line counts). Only request full `git diff` when the user wants
+specific change details — full diffs can be huge.
 
-2. **Review recent commits**:
-   - Run `git log -10 --oneline --graph` to see last 10 commits with branch visualization
-   - Run `git log -3 --stat` to see detailed changes in last 3 commits
-
-3. **Analyze the context**:
-   - Identify the main areas of the codebase being modified
-   - Determine the feature/bug/task being worked on based on:
-     - File paths and names
-     - Commit messages
-     - Nature of changes (new files, modifications, deletions)
-     - Patterns in the changes
-
-4. **Present findings**:
-   - Summarize what appears to have been worked on
-   - Highlight any incomplete work or work-in-progress
-   - Note any apparent blockers or issues based on change patterns
-
-5. **Ask clarifying questions if**:
-   - The changes span multiple unrelated areas
-   - Commit messages are unclear or generic
-   - There's a mix of features and fixes that don't form a coherent story
-   - Significant changes lack commits or commits lack corresponding changes
-   - You cannot determine a clear work context
-
-## Important Notes
-
-- Use the Bash tool to run all git commands in parallel where possible
-- Read relevant changed files if needed to understand context better
-- Be concise but thorough in your analysis
-- Focus on actionable insights about what was being worked on
-- If the work context is clear, don't ask unnecessary questions
+Summarize: what was being worked on, anything in-flight, apparent blockers.
+Ask only if the changes don't form a coherent story.

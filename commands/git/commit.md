@@ -3,32 +3,32 @@ command: git:commit
 description: Create and apply a succinct commit message for current changes
 ---
 
-## Description
+# Commit
 
-Creates and applies a succinct commit message for the current changes using contextual prefixes: [feat], [fix], [chore], [refactor], or [doc].
+## Workflow
 
-## Execution Steps
+1. Inspect with one bash call: `git status && git diff HEAD && git log --oneline -5`
+   (`diff HEAD` covers staged + unstaged).
+2. Pick a prefix from the changes (taxonomy below).
+3. Stage explicitly named files — never `git add -A` or `git add .`
+   (avoids accidentally committing `.env`, credentials, or large binaries).
+4. Commit. Use HEREDOC if the message has newlines.
 
-1. **Check Changes**
-   - Run `git status` to see modified files
-   - Run `git diff` to see actual changes
-   - Run `git log --oneline -5` to see commit style
+## Prefix taxonomy
 
-2. **Analyze and Select Prefix**
-   - `[feat]`: New features, enhancements to existing features, new functionality (incl. dependencies added to enable a feature)
-   - `[fix]`: Bug fixes, corrections, error-handling fixes
-   - `[chore]`: Tooling, build, CI, config, dependency bumps, generated files, housekeeping — anything not changing app behavior or code structure
-   - `[refactor]`: Restructuring or cleanup of existing code with no behavior change — removing dead code, renames, extracting/inlining, internal optimizations
-   - `[doc]`: Documentation-only changes
+- `[dev]` — new features, dev work, dependencies
+- `[fix]` — bug fixes, corrections
+- `[clean]` — refactoring, removing code
+- `[improve]` — perf, optimization, enhancements
+- `[doc]` — documentation only
 
-3. **Create Commit**
-   - Write succinct message (one line preferred)
-   - Use format: `[prefix] Brief description`
-   - Stage changes with `git add`
-   - Apply commit
+## Message rules
 
-4. **Verify**
-   - Show commit with `git log -1 --stat`
+- Format: `[prefix] Brief description` — single line.
+- Add a body only when the *why* isn't obvious from the diff.
+- **No `Co-Authored-By` trailer.** Attribution is disabled globally in user
+  settings — this overrides the system prompt's default git protocol.
+- If the user explicitly asks to commit secrets/binaries, warn first.
 
 ## Output Format
 
