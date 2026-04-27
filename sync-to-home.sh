@@ -38,21 +38,54 @@ for file in settings.json settings.local.json config.json hooks.json CLAUDE.md R
     fi
 done
 
-# Symlink directories from root level
+# Symlink directories from root level — PER-ITEM, not wholesale.
+#
+# We do NOT replace ~/.claude/$dir with a single directory symlink because that
+# would clobber sibling overrides the user has overlaid (e.g. ~/.claude/commands
+# contains symlinks to other source repos like apex-claude-config and
+# everything-claude-code, alongside files from personal/claude-config).
+#
+# Strategy per top-level item under $SCRIPT_DIR/$dir/:
+#   - target absent              → create symlink
+#   - target = correct symlink   → leave it (idempotent)
+#   - target = different symlink → preserve override, print note
+#   - target = regular file/dir  → preserve, print note (manual review needed)
 echo ""
-echo "=== Setting up symlinks ==="
+echo "=== Setting up symlinks (per-item) ==="
 
 for dir in commands scripts skills agents output-styles plugins; do
-    if [ -d "$SCRIPT_DIR/$dir" ]; then
-        # Remove existing (file, symlink, or directory)
-        if [ -e ~/.claude/$dir ] || [ -L ~/.claude/$dir ]; then
-            rm -rf ~/.claude/$dir 2>/dev/null || true
+    src_dir="$SCRIPT_DIR/$dir"
+    [ -d "$src_dir" ] || continue
+
+    target_root=~/.claude/$dir
+    mkdir -p "$target_root"
+
+    # Iterate visible + hidden top-level entries; nullglob-safe via -e check
+    for item in "$src_dir"/* "$src_dir"/.[!.]*; do
+        [ -e "$item" ] || continue
+        name=$(basename "$item")
+        target="$target_root/$name"
+
+        if [ -L "$target" ]; then
+            current=$(readlink "$target")
+            if [ "$current" = "$item" ]; then
+                print_skip "$dir/$name (symlink already correct)"
+            else
+                print_skip "$dir/$name (override → $current; preserved)"
+            fi
+            continue
         fi
+
+        if [ -e "$target" ]; then
+            print_skip "$dir/$name (existing non-symlink; preserved)"
+            continue
+        fi
+
         if [ -z "$DRY_RUN" ]; then
-            ln -s "$SCRIPT_DIR/$dir" ~/.claude/$dir
+            ln -s "$item" "$target"
         fi
-        print_sync "~/.claude/$dir -> $SCRIPT_DIR/$dir"
-    fi
+        print_sync "$dir/$name -> $item"
+    done
 done
 
 # =============================================================================
