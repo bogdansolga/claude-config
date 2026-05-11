@@ -5,7 +5,7 @@ description: Create and apply a succinct commit message for current changes
 
 ## Description
 
-Creates and applies a succinct commit message for the current changes using contextual prefixes: [dev], [clean], [doc], [fix], or [improve].
+Creates and applies a succinct commit message for the current changes using contextual prefixes: [feat], [fix], [chore], [refactor], or [doc].
 
 ## Execution Steps
 
@@ -15,11 +15,11 @@ Creates and applies a succinct commit message for the current changes using cont
    - Run `git log --oneline -5` to see commit style
 
 2. **Analyze and Select Prefix**
-   - `[dev]`: New features, development work, dependencies
-   - `[clean]`: Code cleanup, refactoring, removing code
-   - `[doc]`: Documentation changes only
-   - `[fix]`: Bug fixes, corrections
-   - `[improve]`: Performance, optimization, enhancements
+   - `[feat]`: New features, enhancements to existing features, new functionality (incl. dependencies added to enable a feature)
+   - `[fix]`: Bug fixes, corrections, error-handling fixes
+   - `[chore]`: Tooling, build, CI, config, dependency bumps, generated files, housekeeping — anything not changing app behavior or code structure
+   - `[refactor]`: Restructuring or cleanup of existing code with no behavior change — removing dead code, renames, extracting/inlining, internal optimizations
+   - `[doc]`: Documentation-only changes
 
 3. **Create Commit**
    - Write succinct message (one line preferred)
@@ -42,8 +42,8 @@ Message: {commit message}
 
 ## Examples
 
-- `[dev] Add user authentication endpoints`
+- `[feat] Add user authentication endpoints`
 - `[fix] Resolve null pointer in document upload`
-- `[clean] Remove unused imports from conversation service`
+- `[refactor] Remove unused imports from conversation service`
 - `[doc] Update API documentation for ratings endpoint`
-- `[improve] Optimize database query performance`
+- `[chore] Bump biome to 2.4.15; tighten CI cache key`

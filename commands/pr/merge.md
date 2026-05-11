@@ -25,10 +25,13 @@ Merges the current branch's PR with squash, combining all commit messages into a
    - Look for corresponding PRD files in `docs/plans/` for context
 
 4. **Determine Prefix**
-   - Analyze commit messages and changes to determine type:
-     - `[dev]`: Large features, new functionality, long-running development, dependencies
-     - `[fix]`: Bug fixes, corrections, error handling improvements
-   - Default to `[dev]` for mixed or unclear changes
+   - Analyze commit messages and changes to determine type (same scheme as `/git:commit`):
+     - `[feat]`: New features, enhancements, new functionality (incl. feature-enabling dependencies)
+     - `[fix]`: Bug fixes, corrections, error-handling fixes
+     - `[chore]`: Tooling, build, CI, config, dependency bumps, housekeeping
+     - `[refactor]`: Restructuring / cleanup of existing code with no behavior change
+     - `[doc]`: Documentation-only changes
+   - Default to `[feat]` for mixed or unclear changes
 
 5. **Generate Optimized Commit Message**
    - Get PR title from `gh pr view --json title`
@@ -97,10 +100,10 @@ Merges the current branch's PR with squash, combining all commit messages into a
 Branch: docker-build-improvements
 PR: #123 (mergeable)
 Commits: 6 → 1 (squash)
-Prefix: [dev]
+Prefix: [feat]
 
 Commit message:
-[dev] Docker build security and workflow improvements (#123)
+[feat] Docker build security and workflow improvements (#123)
 
 **Purpose:** Enhance Docker build security and improve CI workflow reliability.
 
@@ -124,10 +127,10 @@ Branch: feature/auth-phase2-oauth-flow
 PR: #32 (mergeable)
 Commits: 12 → 1 (squash)
 Phase detected: Phase 2
-Prefix: [dev]
+Prefix: [feat]
 
 Commit message:
-[dev] Auth Phase 2 - OAuth Flow (#32)
+[feat] Auth Phase 2 - OAuth Flow (#32)
 
 **Phase:** Phase 2 of Authentication implementation
 
