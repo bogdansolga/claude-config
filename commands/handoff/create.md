@@ -24,10 +24,10 @@ Write a self-contained handoff document capturing the current state of this Clau
    - Things that bit you / gotchas discovered (failed approaches, environment quirks, hidden constraints).
    - Any in-flight background tasks, running processes, temporary state (e.g. added swap, opened tunnels) — and whether they were cleaned up.
 
-3. **Decide the output path** (priority order):
+3. **Decide the output path** (priority order — handoffs live *inside the project repo* alongside the code they document):
    - If `$ARGUMENTS` looks like a path, use it.
-   - **Preferred — keep handoffs out of the project repo, version-controlled at the user level:** if a `.claude-config` repo is reachable (it is when `~/.claude/commands` is a symlink — the config root is the *parent* of that symlink's target, e.g. `…/​.claude-config`), write to `<config-root>/handoffs/<project-basename>/<YYYY-MM-DD-HHMM>.md` (timestamped — never overwrite). `<project-basename>` = basename of the current git repo root (or the cwd if not a repo). `mkdir -p` as needed. Mention that it can be committed in the `.claude-config` repo.
-   - Else, fall back in-project: an existing handoff doc (`docs/**/HANDOFF.md`, `HANDOFF.md` at repo root) if there's an obvious one, otherwise `docs/handoffs/<YYYY-MM-DD-HHMM>.md`.
+   - **Default:** `<project-root>/docs/handoffs/<YYYY-MM-DD-HHMM>.md` (timestamped — never overwrite). `<project-root>` = git repo root if there is one, else cwd. `mkdir -p` as needed.
+   - **In-place mode** — if the project already has a single rolling handoff doc (a `HANDOFF.md` at repo root, or a `docs/**/HANDOFF.md` the project's CLAUDE.md / README references as *the* state-snapshot), update **that** in place instead of writing a new file. Mention to the user which mode you picked (timestamped-new vs in-place-update).
    - Tell the user the path you chose.
 
 4. **Write the handoff** using this structure (drop sections that don't apply; keep it tight — facts over prose):
@@ -67,5 +67,6 @@ Write a self-contained handoff document capturing the current state of this Clau
 
 ## Notes
 - Do **not** put secrets in the handoff (passwords, tokens, full connection strings) — reference where they live instead.
-- Do **not** commit the handoff unless the user asks. If they do, and it went to the `.claude-config` repo, commit it there (that repo's commit-prefix convention is `[feat]/[fix]/[chore]/[refactor]/[doc]` — not the host project's).
+- Do **not** commit the handoff unless the user asks. If they do, commit it per the host project's commit-message convention (check the project's CLAUDE.md / recent `git log` — many projects use `[feat]/[fix]/[chore]/[refactor]/[doc]` prefixes; some use Conventional Commits or freeform).
 - If the conversation is thin (little actually happened), say so and write a short handoff rather than padding it.
+- Since handoffs now live inside the project, consider whether to add `docs/handoffs/` to `.gitignore` for projects where you want handoffs ephemeral. For projects where the handoff history is valuable (debug logs, decision records), let them be tracked — that's the default.

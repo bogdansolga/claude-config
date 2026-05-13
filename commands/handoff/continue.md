@@ -11,10 +11,11 @@ Resume a previous Claude Code session by reading its handoff document, verifying
 
 ## Steps
 
-1. **Find the handoff doc** (search in this order):
+1. **Find the handoff doc** (search in this order — handoffs live inside the project repo):
    - If `$ARGUMENTS` is a path, use it.
-   - The user-level location: if `~/.claude/commands` is a symlink, the config root is the parent of its target (e.g. `…/​.claude-config`) — look in `<config-root>/handoffs/<project-basename>/*.md`, most recent by mtime. `<project-basename>` = basename of the current git repo root (or cwd).
-   - In-project: `docs/handoffs/*.md` (most recent), `docs/**/HANDOFF.md`, `HANDOFF.md` at repo root, `docs/**/*handoff*.md`.
+   - `<project-root>/docs/handoffs/*.md` — most recent by mtime (`<project-root>` = git repo root or cwd).
+   - `<project-root>/HANDOFF.md` (the rolling-snapshot pattern some projects use).
+   - `<project-root>/docs/**/HANDOFF.md` or `docs/**/*handoff*.md`.
    - If several plausible candidates exist, list them and ask which one — don't guess.
    - If none exists, say so and suggest running `/handoff:create` at the end of the previous session next time; then fall back to `/git:catchup`-style reconstruction (git log + status + diff).
 
