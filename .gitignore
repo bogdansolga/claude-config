@@ -1,4 +1,5 @@
 plugins/cache/
+plugins/data/
 plugins/marketplaces/
 plugins/blocklist.json
 plugins/install-counts-cache.json

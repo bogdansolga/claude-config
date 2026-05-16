@@ -5,15 +5,17 @@ Central repository for Claude Code configuration - commands, skills, scripts, gu
 ## Install
 
 ```bash
-git clone git@github.com:bogdansolga/claude-config.git ~/.claude-config
-~/.claude-config/install.sh
+git clone git@github.com:bogdansolga/.claude-config.git ~/.claude-config
+~/.claude-config/sync-to-home.sh
 ```
+
+Re-run `sync-to-home.sh` any time the repo changes; it is idempotent (the symlinks into `~/.claude/` get refreshed, `~/.claude-config/` copies updated). Pass `--dry-run` to preview.
 
 ## Commands
 
 **Git**
 - `/git:catchup` - what was I working on?
-- `/git:commit` - commit with [dev]/[fix]/[clean]/[doc]/[improve] prefix
+- `/git:commit` - commit with [feat]/[fix]/[chore]/[refactor]/[doc] prefix
 - `/git:sync` - rebase on main
 - `/git:cleanup` - delete merged branches
 - `/git:pull:workwave` / `/git:pull:nix` - pull with specific SSH key
@@ -42,6 +44,14 @@ git clone git@github.com:bogdansolga/claude-config.git ~/.claude-config
 
 **Workflow**
 - `/workflow:task-declarative` - define success criteria and let agent loop
+
+**Handoff**
+- `/handoff:create` - write a session-handoff doc for a fresh session to resume from
+- `/handoff:continue` - resume work from a session-handoff doc
+
+**PowerPoint (`.pptx` via OOXML)**
+- `/ppt:read` - extract text from a `.pptx` without PowerPoint/LibreOffice
+- `/ppt:update` - edit text in or append slides to a `.pptx`
 
 **Other**
 - `/marp-presentation` - create a Marp presentation
@@ -104,15 +114,16 @@ Managed via `/plugins`. Configuration in `plugins/config.json`.
 ```
 claude-config/
 ├── README.md
-├── install.sh                  # First-time installation
-├── sync-to-home.sh             # Sync changes to ~/.claude
+├── sync-to-home.sh             # Idempotent installer / re-syncer
 ├── biome.jsonc                 # Project linter config
 │
-├── claude-home/                # ~/.claude config files
+├── claude-home/                # → ~/.claude config files
 │   ├── settings.json           # PreToolUse hooks, plugins, status line
 │   ├── settings.local.json     # Local overrides
 │   ├── config.json             # Model, theme, editor
-│   └── hooks.json              # Additional hooks
+│   ├── hooks.json              # Additional hooks
+│   ├── CLAUDE.md               # User-level rules (e.g. rtk preference)
+│   └── RTK.md                  # rtk (Rust Token Killer) reference
 │
 ├── commands/                   # Slash commands (symlinked to ~/.claude/commands)
 │   ├── git/                    # catchup, commit, sync, cleanup, pull, push
@@ -120,6 +131,8 @@ claude-config/
 │   ├── nextjs/                 # audit, optimize, cache-strategy, setup-agents
 │   ├── quality/                # quick-fix, find-large-files, simplify
 │   ├── workflow/               # task-declarative
+│   ├── handoff/                # create, continue
+│   ├── ppt/                    # read, update
 │   └── marp-presentation.md
 │
 ├── agents/                     # Custom agents
@@ -132,21 +145,17 @@ claude-config/
 ├── output-styles/              # Custom output styles
 │   └── direct-objective.md
 │
-├── plugins/                    # Plugin cache and config
+├── plugins/                    # Plugin config (runtime caches gitignored)
 │   └── config.json
 │
 ├── scripts/                    # Standalone scripts
 │   ├── check-code-quality.sh   # Code quality guardrails
-│   ├── debug-status-input.sh
 │   ├── nextjs-audit.ts         # Portable Next.js audit script
 │   ├── status-line.sh
-│   └── toggle-global-commands.sh
+│   ├── toggle-global-commands.sh
+│   └── debug-status-input.sh   # Debug helper for the status line
 │
-├── config/                     # Base configs (templates)
-│   ├── config.json
-│   └── settings.json
-│
-├── docs/                       # Documentation
+├── docs/                       # Design / history docs
 │
 ├── git-hooks/                  # Git hooks for projects
 │   └── pre-commit              # 6-check pre-commit hook

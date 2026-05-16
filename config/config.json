@@ -1,9 +1,0 @@
-{
-  "model": "claude-sonnet-4-20250514",
-  "temperature": 0.1,
-  "thinking_budget": "extended",
-  "theme": "dark-daltonized",
-  "editorMode": "vim",
-  "autoUpdates": true,
-  "hasCompletedOnboarding": true
-}

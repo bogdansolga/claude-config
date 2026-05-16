@@ -31,7 +31,7 @@ echo ""
 echo "=== Syncing to ~/.claude ==="
 
 # Config files from claude-home/
-for file in settings.json settings.local.json config.json hooks.json; do
+for file in settings.json settings.local.json config.json hooks.json CLAUDE.md RTK.md; do
     if [ -f "$SCRIPT_DIR/claude-home/$file" ]; then
         rsync -av $DRY_RUN "$SCRIPT_DIR/claude-home/$file" ~/.claude/
         print_sync "$file"
@@ -79,7 +79,7 @@ else
     print_sync "Sync complete!"
     echo ""
     echo "Synced:"
-    echo "  ~/.claude/settings.json, config.json, hooks.json"
+    echo "  ~/.claude/{settings,config,hooks}.json, CLAUDE.md, RTK.md"
     echo "  ~/.claude/{commands,scripts,skills,agents,output-styles,plugins} (symlinks)"
     echo "  ~/.claude-config/{commands,scripts,skills,next-docs} (copies)"
 fi
