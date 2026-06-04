@@ -9,7 +9,16 @@ git clone git@github.com:bogdansolga/claude-config.git ~/.claude-config
 ~/.claude-config/sync-to-home.sh
 ```
 
-Re-run `sync-to-home.sh` any time the repo changes; it is idempotent (the symlinks into `~/.claude/` get refreshed, `~/.claude-config/` copies updated). Pass `--dry-run` to preview.
+**Windows / PowerShell** (pwsh 7+): use the equivalent script. Symlink creation
+needs elevation — enable Developer Mode (Settings > Privacy & security > For
+developers) or run from an elevated PowerShell.
+
+```powershell
+git clone git@github.com:bogdansolga/claude-config.git $HOME\.claude-config
+& $HOME\.claude-config\sync-to-home.ps1
+```
+
+Re-run `sync-to-home.sh` (or `sync-to-home.ps1` on Windows) any time the repo changes; it is idempotent (the symlinks into `~/.claude/` get refreshed, `~/.claude-config/` copies updated). Pass `--dry-run` (`-DryRun` in PowerShell) to preview.
 
 ## Commands
 
@@ -112,7 +121,8 @@ Managed via `/plugins`. Configuration in `plugins/config.json`.
 ```
 claude-config/
 ├── README.md
-├── sync-to-home.sh             # Idempotent installer / re-syncer
+├── sync-to-home.sh             # Idempotent installer / re-syncer (bash)
+├── sync-to-home.ps1            # Idempotent installer / re-syncer (PowerShell 7+)
 ├── biome.jsonc                 # Project linter config
 │
 ├── claude-home/                # → ~/.claude config files
@@ -173,7 +183,17 @@ After making changes in this repo, sync to home folders:
 ./sync-to-home.sh
 ```
 
-This syncs:
+On Windows / PowerShell 7+:
+
+```powershell
+# Preview changes
+./sync-to-home.ps1 -DryRun
+
+# Apply changes
+./sync-to-home.ps1
+```
+
+Both syncs:
 - `claude-home/*` → `~/.claude/` (settings files)
 - `commands/`, `scripts/`, `skills/`, `agents/`, `output-styles/`, `plugins/` → `~/.claude/` (as symlinks)
 - `commands/`, `scripts/`, `skills/`, `next-docs/` → `~/.claude-config/` (copies, for backwards compatibility)
@@ -191,4 +211,11 @@ Commands auto-update (symlinked). Configs don't (your customizations preserved).
 ```bash
 rm ~/.claude/commands ~/.claude/scripts ~/.claude/skills ~/.claude/agents ~/.claude/output-styles ~/.claude/plugins
 # Restore backup if needed: mv ~/.claude/commands.bak.* ~/.claude/commands
+```
+
+On Windows / PowerShell:
+
+```powershell
+'commands','scripts','skills','agents','output-styles','plugins' |
+    ForEach-Object { Remove-Item (Join-Path $HOME ".claude\$_") -Recurse -Force -ErrorAction SilentlyContinue }
 ```
