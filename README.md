@@ -18,8 +18,6 @@ Re-run `sync-to-home.sh` any time the repo changes; it is idempotent (the symlin
 - `/git:commit` - commit with [feat]/[fix]/[chore]/[refactor]/[doc] prefix
 - `/git:sync` - rebase on main
 - `/git:cleanup` - delete merged branches
-- `/git:pull:workwave` / `/git:pull:nix` - pull with specific SSH key
-- `/git:push:workwave` / `/git:push:nix` - push with specific SSH key
 
 **PR**
 - `/pr:checks` - lint, types, tests before PR
