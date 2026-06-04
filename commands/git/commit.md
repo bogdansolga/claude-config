@@ -16,11 +16,11 @@ description: Create and apply a succinct commit message for current changes
 
 ## Prefix taxonomy
 
-- `[dev]` — new features, dev work, dependencies
-- `[fix]` — bug fixes, corrections
-- `[clean]` — refactoring, removing code
-- `[improve]` — perf, optimization, enhancements
-- `[doc]` — documentation only
+- `[feat]` — new features, enhancements, new functionality (incl. enabling dependencies)
+- `[fix]` — bug fixes, corrections, error-handling fixes
+- `[chore]` — tooling, build, CI, config, dependency bumps, housekeeping (no behavior change)
+- `[refactor]` — restructuring/cleanup with no behavior change (dead code, renames, extract/inline)
+- `[doc]` — documentation-only changes
 
 ## Message rules
 
