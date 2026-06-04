@@ -5,7 +5,7 @@ Central repository for Claude Code configuration - commands, skills, scripts, gu
 ## Install
 
 ```bash
-git clone git@github.com:bogdansolga/.claude-config.git ~/.claude-config
+git clone git@github.com:bogdansolga/claude-config.git ~/.claude-config
 ~/.claude-config/sync-to-home.sh
 ```
 
