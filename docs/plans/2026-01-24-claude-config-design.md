@@ -46,7 +46,7 @@ Commands consolidated from:
 - `ccpm/.claude/commands/`
 
 Excluded:
-- Work-specific commands (apex-presentation, interview-prep)
+- Work-specific commands (interview-prep)
 - Obsolete workflow commands (implement-phase, research, plan, create-tasks)
 
 ## Plugins

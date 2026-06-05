@@ -48,8 +48,8 @@ foreach ($file in @('settings.json', 'settings.local.json', 'config.json', 'hook
 #
 # We do NOT replace ~/.claude/$dir with a single directory symlink because that
 # would clobber sibling overrides the user has overlaid (e.g. ~/.claude/commands
-# contains symlinks to other source repos like apex-claude-config and
-# everything-claude-code, alongside files from personal/claude-config).
+# contains symlinks to other source repos, alongside files from
+# personal/claude-config).
 #
 # Strategy per top-level item under $ScriptDir/$dir/:
 #   - target absent              -> create symlink

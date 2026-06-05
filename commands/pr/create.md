@@ -9,26 +9,24 @@ Analyzes changes between the current branch and master, generates a succinct PR 
 
 ## Arguments
 
-- `$ARGUMENTS` - Remote SSH key to use: `nix` or `workwave` (optional)
+- `$ARGUMENTS` - Name of an SSH key under `~/.ssh/` to use for git/gh (optional)
 
 ## SSH Key Configuration
 
-If a remote argument is provided, use the corresponding SSH key:
-- `nix` → `~/.ssh/nix`
-- `workwave` → `~/.ssh/workwave`
+If an argument is provided, use the matching SSH key at `~/.ssh/<name>`.
 
 If specified, set the environment variable for all git and gh operations:
 ```bash
-GIT_SSH_COMMAND="ssh -i ~/.ssh/<remote> -o IdentitiesOnly=yes"
+GIT_SSH_COMMAND="ssh -i ~/.ssh/<name> -o IdentitiesOnly=yes"
 ```
 
 If no argument provided, use default git/gh authentication.
 
 ## Execution Steps
 
-1. **Check Remote Argument (if provided)**
-   - If `$ARGUMENTS` is provided but not `nix` or `workwave`, display error and exit
-   - If `nix` or `workwave`, set `SSH_KEY_PATH` accordingly
+1. **Check SSH Key Argument (if provided)**
+   - If `$ARGUMENTS` is provided, verify `~/.ssh/<name>` exists; if not, display error and exit
+   - If it exists, set `SSH_KEY_PATH` to `~/.ssh/<name>`
    - If not provided, proceed without custom SSH key
 
 2. **Analyze Branch Changes**
@@ -91,17 +89,14 @@ If no argument provided, use default git/gh authentication.
 # Create PR using default authentication
 /pr:create
 
-# Create PR using workwave SSH key
-/pr:create workwave
-
-# Create PR using nix SSH key
-/pr:create nix
+# Create PR using a named SSH key (~/.ssh/<name>)
+/pr:create <ssh-key-name>
 ```
 
 ## Example Output
 
 ```markdown
-Remote: workwave (using ~/.ssh/workwave)
+SSH key: my-key (using ~/.ssh/my-key)
 Branch: docker-build-improvements
 Base: master
 Commits: 6
@@ -114,7 +109,7 @@ PR #123: Docker Build Security & Workflow Improvements
 
 ## Notes
 
-- The remote argument (`nix` or `workwave`) is optional
+- The SSH key argument is optional
 - The command will fail if not in a git repository
 - Requires `gh` CLI to be installed and authenticated
 - Will prompt for manual input if PR title is ambiguous
