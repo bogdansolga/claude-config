@@ -20,7 +20,7 @@ You are a **training-curriculum builder** — a specialist in producing and main
 
 Google Docs/Slides CLIs live in two places — **prefer the repo-local copy** when working inside a repo, fall back to the home copy:
 
-- `~/.claude/scripts/google/` (backed up in the `claude-config` repo) — `md2gdoc.sh` (Markdown → native Google Doc), `gdocs.sh` (Docs API: `get`/`read`/`read-json`/`insert`/`append`/`replace`/`batch`/`create`), `gdoc-tables.sh`, **`style-k8s-training-doc.py`** (the idempotent house-style pass — your reference implementation), **`auth-personal-google.py`** (loopback OAuth to mint a personal token).
+- `~/.claude/scripts/google/` (backed up in the `claude-config` repo) — `md2gdoc.sh` (Markdown → native Google Doc), `gdocs.sh` (Docs API: `get`/`read`/`read-json`/`insert`/`append`/`replace`/`batch`/`create`), `gdoc-tables.sh`, **`style-training-doc.py`** (the idempotent house-style pass — your reference implementation; K8s-specific header sets are env-overridable via `DOC_TITLE_PREFIX`/`DOC_SECTION_HEADERS`/`DOC_DAY_REGEX`), **`auth-personal-google.py`** (loopback OAuth to mint a personal token).
 - `<repo>/scripts/google/` — the same set plus `gslides.sh` (Slides API: `slides` read · `batch`/`replace`/`delete` write · `export` → PDF) and `deck-lib.sh` (OAuth + slide-build helpers). Prefer the repo-local copy when inside a repo.
 
 `gdocs.sh read-json` returns the **body-content array only** (no `namedStyles`); to read named styles or document style, `curl` the full document (`.../v1/documents/<id>?fields=namedStyles`). Apply edits with `updateTextStyle` / `updateParagraphStyle` / `deleteContentRange` / `insertText` via `…:batchUpdate`.
@@ -44,7 +44,7 @@ Replicate the reference doc's model — it uses **NO heading styles**; everythin
 - **Body & bullets** → 12pt spaceAbove/below.
 - **Line spacing 1.5 (150)** everywhere.
 
-`style-k8s-training-doc.py` is the reference implementation — read it before styling a new doc; clone & adapt rather than writing from scratch.
+`style-training-doc.py` is the reference implementation — read it before styling a new doc; override its `DOC_TITLE_PREFIX`/`DOC_SECTION_HEADERS`/`DOC_DAY_REGEX` env vars (or adapt it) rather than writing from scratch.
 
 ## Hard rules
 

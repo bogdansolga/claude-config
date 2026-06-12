@@ -1,39 +1,48 @@
 #!/usr/bin/env python3
-"""Style the Kubernetes-training Google Doc to match the AI-course reference look:
+"""Style a training-overview Google Doc to match the house reference look:
 
-  - Title line        -> bold, 14pt
-  - Subtitle line     -> regular, 12pt   (split off the title if the upload merged them)
-  - Section headers   -> bold, 13pt
-  - Day headers       -> bold, 13pt
-  - Markdown artifacts stripped: literal ** around the tab-prefixed headers, and --- rules.
+  - Title line        -> centered, bold, 14pt
+  - Subtitle line     -> centered, grey (0.6), 12pt   (split off the title if merged)
+  - Section headers   -> bold, 13pt, blue (#0000ff), first-line indent 36pt, spaceBelow 10
+  - Day headers       -> same as section headers
+  - Body & bullets    -> 12pt spaceAbove/below
+  - Line spacing 1.5 (150) everywhere
+  - Markdown artifacts stripped: literal ** around headers, --- rules
+  - Blank-line runs collapsed to a single blank (one blank line between blocks)
 
-Body stays the Doc default (Arial 11 / 115%), matching the reference NORMAL_TEXT.
 The reference uses NO heading styles — everything is bold-sized NORMAL_TEXT — so we mirror that.
+Idempotent / re-runnable. Preserves hyperlinks (operates by index, never re-inserts text).
 
-Idempotent / re-runnable. Preserves all existing hyperlinks (operates by index, never re-inserts text).
-
-Usage:  python3 style-k8s-training-doc.py [DOC_ID]
-Env:    TOKEN_PATH (default ~/.config/gdocs-personal/token.json)
+Usage:  python3 style-training-doc.py [DOC_ID]
+Env:
+  TOKEN_PATH          token.json (default ~/.config/gdocs-personal/token.json)
+  DOC_TITLE_PREFIX    text the title line starts with (default "Kubernetes training")
+  DOC_SECTION_HEADERS JSON array of section-header strings (override per course)
+  DOC_DAY_REGEX       regex matching day/module headers (override per course)
 """
 import json, os, re, sys, urllib.parse, urllib.request, urllib.error
-from datetime import datetime, timezone
+from datetime import datetime, timezone, timedelta
 
 TOKEN_PATH = os.environ.get("TOKEN_PATH", os.path.expanduser("~/.config/gdocs-personal/token.json"))
 DOC = sys.argv[1] if len(sys.argv) > 1 else "1VrPEJlcsEoA7UkDAkxWtFlHBFpZ0nonFAhSqQMKsuGM"
 BASE = f"https://docs.googleapis.com/v1/documents/{DOC}"
 
-SECTION_HEADERS = {
+# ── per-course config (override via env to reuse on other training docs) ──
+TITLE_PREFIX = os.environ.get("DOC_TITLE_PREFIX", "Kubernetes training")
+SECTION_HEADERS = set(json.loads(os.environ["DOC_SECTION_HEADERS"])) if os.environ.get("DOC_SECTION_HEADERS") else {
     "Training description", "Training objectives",
     "Training duration, days and sessions scheduling",
     "Targeted audience", "Prerequisites", "Presented topics", "Additional notes",
 }
-DAY_RE = re.compile(r"^(Day [123]:|Advanced Modules \(optional 4th day\))")
-TITLE_PREFIX = "Kubernetes training"
+DAY_RE = re.compile(os.environ.get("DOC_DAY_REGEX", r"^(Day [123]:|Advanced Modules \(optional 4th day\))"))
 
 PT = lambda n: {"magnitude": n, "unit": "PT"}
+BLUE = {"color": {"rgbColor": {"blue": 1.0}}}
+GREY = {"color": {"rgbColor": {"red": 0.6, "green": 0.6, "blue": 0.6}}}
+LINE = 150
 
 
-# ── token ────────────────────────────────────────────────────────
+# ── token + api ──────────────────────────────────────────────────
 def get_token():
     with open(TOKEN_PATH) as f:
         t = json.load(f)
@@ -47,7 +56,6 @@ def get_token():
     with urllib.request.urlopen("https://oauth2.googleapis.com/token", data=data) as r:
         nt = json.load(r)
     t["token"] = nt["access_token"]
-    from datetime import timedelta
     t["expiry"] = (datetime.now(timezone.utc) + timedelta(seconds=nt.get("expires_in", 3600))).strftime("%Y-%m-%dT%H:%M:%SZ")
     with open(TOKEN_PATH, "w") as f:
         json.dump(t, f, indent=2)
@@ -72,12 +80,10 @@ def get_doc():
 
 
 def batch(requests):
-    if not requests:
-        return
-    api("POST", BASE + ":batchUpdate", {"requests": requests})
+    if requests:
+        api("POST", BASE + ":batchUpdate", {"requests": requests})
 
 
-# ── helpers ──────────────────────────────────────────────────────
 def paras(doc):
     for el in doc["body"]["content"]:
         if "paragraph" in el:
@@ -89,7 +95,6 @@ def text_of(el):
 
 
 def star_ranges(el):
-    """Absolute [start,end) ranges of every '*' char in the paragraph."""
     out = []
     for e in el["paragraph"].get("elements", []):
         tr = e.get("textRun")
@@ -108,12 +113,35 @@ dels = []
 for el in paras(doc):
     txt = text_of(el)
     if txt.replace("*", "").strip() == "---":
-        dels.append((el["startIndex"], el["endIndex"]))   # whole paragraph incl newline
+        dels.append((el["startIndex"], el["endIndex"]))
     elif "*" in txt:
         dels.extend(star_ranges(el))
-dels.sort(key=lambda r: r[0], reverse=True)   # back-to-front keeps indices valid
+dels.sort(key=lambda r: r[0], reverse=True)
 batch([{"deleteContentRange": {"range": {"startIndex": s, "endIndex": e}}} for s, e in dels])
 print(f"pass 1: removed {len(dels)} artifact range(s)")
+
+# ── pass 1.5: collapse runs of >=2 blank paragraphs to one (loop to convergence) ──
+iters = 0
+for _ in range(8):
+    doc = get_doc()
+    starts, run_start, run_len = [], None, 0
+    for el in paras(doc):
+        if text_of(el).strip() == "":
+            if run_len == 0:
+                run_start = el["startIndex"]
+            run_len += 1
+        else:
+            if run_len >= 2:
+                starts.append(run_start)   # delete ONE blank from this run
+            run_len = 0
+    if run_len >= 2:
+        starts.append(run_start)
+    if not starts:
+        break
+    starts.sort(reverse=True)
+    batch([{"deleteContentRange": {"range": {"startIndex": s, "endIndex": s + 1}}} for s in starts])
+    iters += 1
+print(f"pass 1.5: collapsed blank runs to one line each ({iters} iteration(s))")
 
 # ── pass 2: split a merged "Title-- subtitle" line ───────────────
 doc = get_doc()
@@ -121,27 +149,20 @@ for el in paras(doc):
     txt = text_of(el)
     if txt.startswith(TITLE_PREFIX):
         body = txt.rstrip("\n")
-        if body != TITLE_PREFIX and "--" in body:               # merged
+        if body != TITLE_PREFIX and "--" in body:
             off = body.index("--")
-            split_at = el["startIndex"] + off
-            batch([{"insertText": {"location": {"index": split_at}, "text": "\n"}}])
+            batch([{"insertText": {"location": {"index": el["startIndex"] + off}, "text": "\n"}}])
             print("pass 2: split title / subtitle")
         else:
             print("pass 2: title already separate")
         break
 
-# ── pass 3: full styling to match the reference ──────────────────
-# Reference look: title/subtitle centered (subtitle grey 0.6); section + day
-# headers bold-blue, first-line-indented 36pt; line spacing 1.5 everywhere;
-# 12pt above/below on body + bullets (the breathing room between blocks).
+# ── pass 3: full styling ─────────────────────────────────────────
 doc = get_doc()
 reqs = []
-BLUE = {"color": {"rgbColor": {"blue": 1.0}}}
-GREY = {"color": {"rgbColor": {"red": 0.6, "green": 0.6, "blue": 0.6}}}
-LINE = 150
 
 
-def txt(el, size=None, bold=None, color=None):
+def txt_style(el, size=None, bold=None, color=None):
     s, e = el["startIndex"], max(el["startIndex"] + 1, el["endIndex"] - 1)
     ts, fields = {}, []
     if bold is not None:
@@ -155,7 +176,7 @@ def txt(el, size=None, bold=None, color=None):
                                           "textStyle": ts, "fields": ",".join(fields)}})
 
 
-def para(el, align=None, above=None, below=None, first=None, line=None):
+def par_style(el, align=None, above=None, below=None, first=None, line=None):
     s, e = el["startIndex"], max(el["startIndex"] + 1, el["endIndex"] - 1)
     ps, fields = {}, []
     if align is not None:
@@ -178,18 +199,15 @@ for el in paras(doc):
     t = text_of(el).rstrip("\n")
     key = t.strip()
     if not key:
-        continue  # leave blank separators alone
-    is_bullet = "bullet" in el["paragraph"]
+        continue
     if not seen_title and t.startswith(TITLE_PREFIX):
-        txt(el, 14, True); para(el, align="CENTER", above=10, line=LINE); seen_title = True
+        txt_style(el, 14, True); par_style(el, align="CENTER", above=10, line=LINE); seen_title = True
     elif t.startswith("--") and "objectives" in t:
-        txt(el, 12, False, GREY); para(el, align="CENTER", line=LINE)
+        txt_style(el, 12, False, GREY); par_style(el, align="CENTER", line=LINE)
     elif key in SECTION_HEADERS or DAY_RE.match(key):
-        txt(el, 13, True, BLUE); para(el, first=36, below=10, line=LINE)
-    elif is_bullet:
-        para(el, above=12, below=12, line=LINE)
+        txt_style(el, 13, True, BLUE); par_style(el, first=36, below=10, line=LINE)
     else:
-        para(el, above=12, below=12, line=LINE)
+        par_style(el, above=12, below=12, line=LINE)
 batch(reqs)
 print(f"pass 3: applied {len(reqs)} style request(s) "
       "(centered title/subtitle, blue indented headers, 1.5 line, 12pt spacing)")
