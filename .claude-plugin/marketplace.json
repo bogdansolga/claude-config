@@ -1,0 +1,11 @@
+{
+  "name": "nix-config",
+  "owner": { "name": "Bogdan Solga" },
+  "plugins": [
+    {
+      "name": "nix",
+      "source": "./plugins/nix",
+      "description": "N-iX toolkit: Jira, Google Docs/Sheets/Drive, git-with-nix-identity"
+    }
+  ]
+}
