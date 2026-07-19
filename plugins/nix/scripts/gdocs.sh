@@ -34,7 +34,7 @@
 set -euo pipefail
 
 # Token resolution: explicit TOKEN_PATH wins; else GOOGLE_PROFILE -> ~/.config/google/<profile>/token.json
-# (e.g. GOOGLE_PROFILE=n-ix); else the legacy mcp-google-sheets default.
+# (e.g. GOOGLE_PROFILE=nix); else the legacy mcp-google-sheets default.
 if [ -n "${TOKEN_PATH:-}" ]; then :
 elif [ -n "${GOOGLE_PROFILE:-}" ]; then TOKEN_PATH="$HOME/.config/google/${GOOGLE_PROFILE}/token.json"
 else TOKEN_PATH="$HOME/.config/mcp-google-sheets/token.json"; fi
@@ -361,7 +361,7 @@ Commands:
                                            (defaults: A4 portrait 0.5)
 
 Account selection:
-  GOOGLE_PROFILE=n-ix gdocs.sh ...         Use ~/.config/google/n-ix/token.json
+  GOOGLE_PROFILE=nix gdocs.sh ...         Use ~/.config/google/nix/token.json
   TOKEN_PATH=/path/token.json gdocs.sh ... Use an explicit token file
 
 Checkbox workflow (two-step):
