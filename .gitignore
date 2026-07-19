@@ -7,3 +7,7 @@ plugins/installed_plugins.json
 plugins/known_marketplaces.json
 .idea
 .DS_Store
+.env
+**/.env
+*/.env
+**/token.json
