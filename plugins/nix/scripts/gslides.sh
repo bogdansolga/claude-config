@@ -41,9 +41,12 @@ set -euo pipefail
 
 # Token resolution: explicit TOKEN_PATH wins; else GOOGLE_PROFILE -> ~/.config/google/<profile>/token.json
 # (e.g. GOOGLE_PROFILE=nix); else the legacy mcp-google-sheets default.
-if [ -n "${TOKEN_PATH:-}" ]; then :
-elif [ -n "${GOOGLE_PROFILE:-}" ]; then TOKEN_PATH="$HOME/.config/google/${GOOGLE_PROFILE}/token.json"
-else TOKEN_PATH="$HOME/.config/mcp-google-sheets/token.json"; fi
+if [ -z "${TOKEN_PATH:-}" ]; then
+  # Account profile: GOOGLE_PROFILE env wins; else the first positional arg (nix, personal, …).
+  [ -n "${GOOGLE_PROFILE:-}" ] || { GOOGLE_PROFILE="${1:?profile required as 1st arg (e.g. nix, personal) or set GOOGLE_PROFILE/TOKEN_PATH}"; shift; }
+  export GOOGLE_PROFILE
+  TOKEN_PATH="$HOME/.config/google/${GOOGLE_PROFILE}/token.json"
+fi
 API="https://slides.googleapis.com/v1/presentations"
 
 # ── Token management (shared with gsheet.sh) ────────────────────

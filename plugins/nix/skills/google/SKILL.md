@@ -1,6 +1,6 @@
 ---
 name: google
-description: "Use when reading or editing Google Docs, Sheets, Slides, or Drive files in the N-iX Google workspace — read a doc as text/JSON, batch-format or edit a doc, read/write sheets, read/replace/export slides, list/search Drive. Driven by the bundled gdocs.sh / gsheet.sh / gslides.sh / gdrive.sh with GOOGLE_PROFILE=nix (shell + curl + jq, no MCP). Trigger on any docs.google.com / drive.google.com / N-iX Google file request."
+description: "Use when reading or editing Google Docs, Sheets, Slides, or Drive files — read a doc as text/JSON, batch-format or edit a doc, read/write sheets, read/replace/export slides, list/search Drive. Driven by the bundled gdocs.sh / gsheet.sh / gslides.sh / gdrive.sh, which take the account profile as their FIRST arg (nix for N-iX, personal for personal). Shell + curl + jq, no MCP. Trigger on any docs.google.com / drive.google.com Google file request."
 ---
 
 # nix:google — Google Docs/Sheets/Slides/Drive CLI for the N-iX workspace
@@ -16,22 +16,28 @@ Bundled with this plugin under `${CLAUDE_PLUGIN_ROOT}/scripts/` — always refer
 - `gdrive.sh` — Google Drive (list/search/download)
 - `gdoc2md.py` — Doc → Markdown helper
 
-## Auth — n-ix profile (do this every call)
+## Auth — account profile is the FIRST arg
 
-Token resolution: `TOKEN_PATH` env wins → else **`GOOGLE_PROFILE=<profile>` → `~/.config/google/<profile>/token.json`** → else a legacy default. **For all N-iX docs prefix every command with `GOOGLE_PROFILE=nix`** → `~/.config/google/nix/token.json` (OAuth refresh token; the scripts auto-refresh the short-lived access token). A **`personal`** profile also exists — do **not** use it for n-ix content. This token is global — works from any directory.
+Every script takes the **account profile as its first positional argument** — it names the OAuth token at `~/.config/google/<profile>/token.json` (the scripts auto-refresh the short-lived access token). Resolution order: `TOKEN_PATH` env override → `GOOGLE_PROFILE` env → **first positional arg**.
+
+- **N-iX docs → `nix`:** `"$G" nix read DOC_ID` → `~/.config/google/nix/token.json`.
+- **Personal (or any other account) → its profile name:** `"$G" personal read DOC_ID`. **Same scripts, one skill — just swap the profile;** never use `personal` for N-iX content, or `nix` for personal.
+- The env form still works for existing callers: `"$G" nix read DOC_ID`.
+
+The token is global — works from any directory.
 
 ## Commands (gdocs.sh)
 
 ```bash
 G="${CLAUDE_PLUGIN_ROOT}/scripts/gdocs.sh"
-GOOGLE_PROFILE=nix "$G" get       DOC_ID          # title + revisionId
-GOOGLE_PROFILE=nix "$G" read      DOC_ID          # full document as plain text
-GOOGLE_PROFILE=nix "$G" read-json DOC_ID          # body.content array (structural elements → char indices)
-GOOGLE_PROFILE=nix "$G" replace   DOC_ID "FIND" "REPLACE"
-GOOGLE_PROFILE=nix "$G" append    DOC_ID "text"
-GOOGLE_PROFILE=nix "$G" insert    DOC_ID INDEX "text"
-GOOGLE_PROFILE=nix "$G" batch     DOC_ID '<json-array-of-batchUpdate-requests>'   # raw edits/formatting
-GOOGLE_PROFILE=nix "$G" comments  DOC_ID [--include-resolved]
+"$G" nix get       DOC_ID          # title + revisionId
+"$G" nix read      DOC_ID          # full document as plain text
+"$G" nix read-json DOC_ID          # body.content array (structural elements → char indices)
+"$G" nix replace   DOC_ID "FIND" "REPLACE"
+"$G" nix append    DOC_ID "text"
+"$G" nix insert    DOC_ID INDEX "text"
+"$G" nix batch     DOC_ID '<json-array-of-batchUpdate-requests>'   # raw edits/formatting
+"$G" nix comments  DOC_ID [--include-resolved]
 ```
 
 The DOC_ID is the long string in the URL: `docs.google.com/document/d/<DOC_ID>/edit`.
@@ -40,12 +46,12 @@ The DOC_ID is the long string in the URL: `docs.google.com/document/d/<DOC_ID>/e
 
 ```bash
 S="${CLAUDE_PLUGIN_ROOT}/scripts/gslides.sh"
-GOOGLE_PROFILE=nix "$S" info    PRESENTATION_ID              # presentationId, page size, slide objectIds
-GOOGLE_PROFILE=nix "$S" text    PRESENTATION_ID [SLIDE_IDX]  # all slides' text (or one slide, 0-indexed)
-GOOGLE_PROFILE=nix "$S" slides  PRESENTATION_ID              # list slide objectIds (p1, p2, …)
-GOOGLE_PROFILE=nix "$S" slide   PRESENTATION_ID SLIDE_IDX    # one slide's elements/structure
-GOOGLE_PROFILE=nix "$S" replace PRESENTATION_ID "OLD" "NEW"  # find/replace text across the deck
-GOOGLE_PROFILE=nix "$S" export  PRESENTATION_ID              # export (PDF via Drive)
+"$S" nix info    PRESENTATION_ID              # presentationId, page size, slide objectIds
+"$S" nix text    PRESENTATION_ID [SLIDE_IDX]  # all slides' text (or one slide, 0-indexed)
+"$S" nix slides  PRESENTATION_ID              # list slide objectIds (p1, p2, …)
+"$S" nix slide   PRESENTATION_ID SLIDE_IDX    # one slide's elements/structure
+"$S" nix replace PRESENTATION_ID "OLD" "NEW"  # find/replace text across the deck
+"$S" nix export  PRESENTATION_ID              # export (PDF via Drive)
 # also: shapes · set-text · set-font · duplicate · delete · batch (raw batchUpdate)
 ```
 
@@ -54,12 +60,12 @@ The `#slide=id.pN` fragment is the slide's objectId — `pN` is the N-th slide (
 
 ## Sheets / Drive
 
-`gsheet.sh` and `gdrive.sh` share the token pattern — always prefix `GOOGLE_PROFILE=nix`. Run the script with no args for its usage.
+`gsheet.sh` and `gdrive.sh` share the same profile-first convention — pass the profile as the first arg (e.g. `gsheet.sh nix read …`). Run the script with no args for its usage.
 
 ## Recipes
 
-- **Read a shared doc:** `GOOGLE_PROFILE=nix "$G" read DOC_ID`.
-- **Read a deck (or one slide):** `GOOGLE_PROFILE=nix "$S" text PRESENTATION_ID` for the whole deck; append the 0-indexed slide number for just one (`#slide=id.p3` → `text PRESENTATION_ID 2`).
+- **Read a shared doc:** `"$G" nix read DOC_ID`.
+- **Read a deck (or one slide):** `"$S" nix text PRESENTATION_ID` for the whole deck; append the 0-indexed slide number for just one (`#slide=id.p3` → `text PRESENTATION_ID 2`).
 - **Fit a doc to one page (formatting, not text cuts):** get indices with `read-json` (returns the `body.content` array — last `endIndex` + heading ranges), then `batch` with: `updateDocumentStyle` margins 36pt top/bottom, 54pt left/right; `updateParagraphStyle` over `{startIndex:1, endIndex:<last-1>}` → `lineSpacing:100`, `spaceAbove/Below:0`; `updateTextStyle` on heading ranges → smaller `fontSize`.
 - **Targeted wording change:** `replace DOC_ID "old" "new"` (exact match, keeps formatting).
 

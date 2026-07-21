@@ -34,10 +34,13 @@
 set -euo pipefail
 
 # Token resolution: explicit TOKEN_PATH wins; else GOOGLE_PROFILE -> ~/.config/google/<profile>/token.json
-# (e.g. GOOGLE_PROFILE=nix); else the legacy mcp-google-sheets default.
-if [ -n "${TOKEN_PATH:-}" ]; then :
-elif [ -n "${GOOGLE_PROFILE:-}" ]; then TOKEN_PATH="$HOME/.config/google/${GOOGLE_PROFILE}/token.json"
-else TOKEN_PATH="$HOME/.config/mcp-google-sheets/token.json"; fi
+# (e.g. GOOGLE_PROFILE=n-ix); else the legacy mcp-google-sheets default.
+if [ -z "${TOKEN_PATH:-}" ]; then
+  # Account profile: GOOGLE_PROFILE env wins; else the first positional arg (nix, personal, …).
+  [ -n "${GOOGLE_PROFILE:-}" ] || { GOOGLE_PROFILE="${1:?profile required as 1st arg (e.g. nix, personal) or set GOOGLE_PROFILE/TOKEN_PATH}"; shift; }
+  export GOOGLE_PROFILE
+  TOKEN_PATH="$HOME/.config/google/${GOOGLE_PROFILE}/token.json"
+fi
 API="https://docs.googleapis.com/v1/documents"
 DRIVE_API="https://www.googleapis.com/drive/v3/files"
 
@@ -361,7 +364,7 @@ Commands:
                                            (defaults: A4 portrait 0.5)
 
 Account selection:
-  GOOGLE_PROFILE=nix gdocs.sh ...         Use ~/.config/google/nix/token.json
+  GOOGLE_PROFILE=n-ix gdocs.sh ...         Use ~/.config/google/n-ix/token.json
   TOKEN_PATH=/path/token.json gdocs.sh ... Use an explicit token file
 
 Checkbox workflow (two-step):
